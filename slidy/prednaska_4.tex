@@ -1,0 +1,369 @@
+\pdfoutput=1
+\documentclass[red,handout,professionalfont]{beamer}
+% \documentclass[red,professionalfont]{beamer}
+\usepackage{multimedia}
+\usepackage{url}
+\usepackage{amssymb}  % the check symbol 
+\include{pythonlisting}
+\usepackage{tikz}
+\usepackage{tikz-qtree}
+\usetikzlibrary{decorations.pathreplacing,positioning}
+%\bibliography{mujstyl}
+\theoremstyle{definition}
+\newtheorem{definice}{Definition}[section]
+\newtheorem{thm}{Theorem}[section]
+\newtheorem{idea}{Idea}[section]
+\newtheorem{cor}[thm]{Corrollary}
+\newtheorem{lem}[thm]{Lemma}
+\newtheorem{obs}[thm]{Observation}
+\newtheorem{rem}[thm]{Remark}
+\newtheorem{ex}[thm]{Example}
+\newtheorem{quizz}[thm]{Question}
+\newcommand{\pomega}{\mbox{$\mathcal{P}(\omega)$}}
+\newcommand{\cont}{\mbox{$\mathfrak c$}}
+\newcommand{\ba}{\mbox{${\mathbb B}$}}
+\newcommand{\0}{\mbox{${\bf 0}$}}
+\newcommand{\F}{\mbox{${\mathcal F}$}}
+\newcommand{\rest}{\mbox{$\upharpoonright$}}
+\newcommand{\cl}[1]{\mbox{$\overline{#1}$}}
+\newcommand{\yes}{\textcolor{green}{$\checkmark$}}
+\newcommand{\no}{\textcolor{red}{$\times$}}
+\renewcommand{\emph}[1]{{\bf #1}}
+\mode<presentation>
+{
+\useinnertheme{rounded}
+
+\usecolortheme{whale}
+\usecolortheme{orchid}
+
+\setbeamerfont{block title}{size={}}
+
+%   \useoutertheme{default}
+%   \usetheme{Copenhagen}
+%   \useoutertheme{default}
+  \setbeamercovered{invisible}
+}
+\setbeamertemplate{navigation symbols}{} 
+\usepackage[utf8]{inputenc}
+\usepackage[czech,english]{babel}
+\usepackage{lmodern}
+%\usepackage{times}
+\usepackage[T1]{fontenc}
+
+
+\tikzset{onslide/.code args={<#1>#2}{%
+  \only<#1>{\pgfkeysalso{#2}} % \pgfkeysalso doesn't change the path
+}}
+
+\tikzstyle{hilight}=[red,ultra thick]
+\tikzstyle{active}=[yellow,ultra thick]
+\tikzstyle{memory}=[blue]
+
+
+
+\title[]{Informovaný Agent "Hledač" \\ (4. přednáška)}
+
+% Dnes se podíváme na jednoduché "goal-based" agenty
+% a ukážeme si obecné postupy 
+
+
+% \author[]{Jonathan L. Verner}
+% \institute[Charles University, Prague] % (optional,but mostly needed)
+% {
+%   Department of Logic\\
+%   Faculty of Philosophy\\
+%   Charles University in Prague
+% }
+\date[]{}
+% \subject{}
+%\pgfdeclareimage[height=1cm]{university-logo}{UK-logo}
+%\logo{\pgfuseimage{university-logo}}
+
+\begin{document}
+
+\AtBeginSection[]
+{
+  \begin{frame}<beamer>
+    \begin{block}{}
+%    \begin{centering}
+    \hfill\insertsection\hfill\
+ %   \end{centering}
+    \end{block}
+    %\tableofcontents[currentsection]
+  \end{frame}
+}
+
+\AtBeginSubsection[]
+{
+  \begin{frame}<beamer>
+    \begin{block}{}
+  %  \begin{centering}
+    \hfill\insertsubsection\hfill\
+   % \begin{centering}
+    \end{block}
+    %\tableofcontents[currentsection]
+  \end{frame}
+}
+
+%#################################################################
+
+\begin{frame}{} \titlepage
+%{\ \hfill \includegraphics[width=1cm]{UK-logo}\hfill\ }
+\end{frame}
+
+\begin{frame}\frametitle{Informované Prohledávání}
+V minulé přednášce jsme probírali prohledávací algoritmy BFS, DFS, DLS, IDS,
+které nevyužívají žádných speciálních znalostí o problému.\pause\ Problémem
+je malá efektivita.\pause\ Dnes se podíváme, jak jejich efektivitu zlepšit, pokud
+o konkrétním problému něco víme.
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{Stromové prohledávání dle strategie --- připomenutí}
+\begin{python}
+def treeSearch( problem, strategy ):
+    # Inicializuj strom.
+    listy = node(None, problem.initial_state())
+    while True:
+      # Zvol kandidata k expanzi dle strategie.
+      leaf_node = strategy.choose(problem,listy)
+      state = leaf_node.state()
+      # Mame reseni,vrat posloupnost kroku.
+      if problem.is_goal( state ):
+        return leaf_node
+      # Expanduj kandidata (pridej do stromu 
+      # uzly, ktere sousedi s kandidatem).
+      for a in state.possible_actions():
+        cil_stav = stav.act(a)
+        child = node(leaf_node,cil_stav)
+        listy.append(child)
+\end{python}
+\end{frame}
+\begin{frame}[fragile]\frametitle{Grafové prohledávání dle strategie --- připomenutí}
+\begin{python}
+def treeSearch( problem, strategy ):
+    # Inicializuj strom.
+    listy = node(None, problem.initial_state())
+    while True:
+      # Zvol kandidata k expanzi dle strategie.
+      leaf_node = strategy.choose(problem,listy)
+      state = leaf_node.state()
+      if problem.is_goal( state ):
+        return leaf_node
+      #GraphSearch - uklada si navstivene stavy
+      visited.append( state )
+      for a in state.possible_actions():
+        cil_stav = state.act(a)
+        if cil_stav in visited:
+          continue
+        child = node(leaf_node,cil_stav)
+        listy.append(child)
+\end{python}
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{Strategie --- evaluační funkce}
+\begin{python}
+def strategy( problem, listy ):
+    candidate = listy[0]
+    fitness = evalfunc(candidate)
+    for i in range(len(listy)):
+      leaf = listy[i]
+      if evalfunc(i,leaf) <  fitness:
+          candidate = leaf
+          fitness = evalfunc(leaf)
+    listy.remove(candidate)
+    return candidate
+\end{python}\pause
+Vhodnou volbou evaluační funkce {\tt evalfunc} dostáváme jednotlivé algoritmy:\pause
+\begin{itemize} 
+ \item BFS\pause\ --- {\tt evalfunc(i,leaf) = depth(leaf)}\pause
+ \item DFS\pause\ --- {\tt evalfunc(i,leaf) = i}
+\end{itemize}
+\end{frame}
+
+\begin{frame}\frametitle{Problém --- expanze neperspektivních uzlů}
+\begin{block}{}
+\begin{center}
+ Algoritmus zbytečně expanduje neperspektivní uzly. 
+\end{center}
+\end{block}\pause
+\begin{itemize}
+ \item Hloubka uzlu (resp. jeho pořadí) nijak nesouvisí s ``perspektivností''.\pause
+ \item V konkrétních případech lze často perspektivnost uzlu odhadnout:\pause
+ \begin{itemize}
+   \item routing\pause\ (hledání cesty na mapě)\pause\ --- perspektivní jsou ty uzly, které jsou blíž cíli\pause
+   \item loydova osmička\pause\ --- perspektivní jsou ty uzly, kde je osmička blíže cílovému uspořádání\pause
+ \end{itemize}
+\end{itemize}
+Na základě znalosti jednotlivých problémů lze nalézt vhodnout \alert{heuristickou funkci} $h(node)$\pause\ a položit např.
+\begin{center}
+ {\tt evalfunc(i,leaf) = h(leaf)}
+\end{center}
+\end{frame}
+
+\begin{frame}\frametitle{Hladové algoritmy (greedy best-first search)}
+Heuristickou funkci $h(node)$ lze interpretovat jako ``cenu'' cesty z daného uzlu do cíle.\pause\ Hladový algoritmus volí uzel s nejmenší cenou:\pause
+\begin{center}
+ {\tt evalfunc(i,leaf) = h(leaf)}
+\end{center}\pause
+\begin{itemize}
+ \item úplnost:\pause\ NE (treesearch)\pause, ANO (graph search pro konečné grafy)\pause
+%  problém cyklů
+ \item časová složitost:\pause\ obecně $O(b^m)$\pause, dobrá heuristika může dramaticky zlepšit\pause
+ \item paměťová náročnost:\pause\  obecně $O(b^m)$\pause, dobrá heuristika může dramaticky zlepšit\pause
+\end{itemize}
+\begin{block}{}
+\begin{center}
+  Momentálně nejlevnější uzel nemusí být nejvhodnější.\pause\\ (Nejsme tak bohatí, abychom si kupovali levné věci)
+\end{center}
+\end{block}
+\end{frame}
+
+\begin{frame}\frametitle{$A^*$ search --- minimalizace celkových nákladů}
+ $A^*$ algoritmus bere v potaz nejen odhadovanou ``cenu'' cesty k cíli $h(node)$\pause, ale i cenu cesty z počátku $g(node)$.\pause
+
+\begin{center}
+ evalfunc(i,leaf) = g(leaf) + h(leaf)
+\end{center}
+
+\begin{itemize}
+ \item Algoritmus tedy neprodlužuje cesty, které už jsou dlouhé.\pause
+ \item Evaluační funkce udává odhadovanou cenu \alert{nejlevnější cesty} přes daný uzel.\pause
+ \item Pro vhodnou volbu $h(node)$ (přípustná, konzistentní) je algoritmus optimální!
+\end{itemize}
+\end{frame}
+
+\begin{frame}\frametitle{Přípustné a monotónní heuristiky}
+  Heuristika je \emph{přípustná} (admisibile)\pause, pokud je vždy nižší, než minimální celková cena cesty z daného uzlu do cíle.\pause\ Heuristika
+  je \emph{monotónní} (příp. konzistentní)\pause, pokud splňuje variantu tzv. trojúhelníkové nerovnosti:
+  \begin{displaymath}
+   h(node) \leq cost(node,action,successor) + h(successor),
+  \end{displaymath}\pause
+  kde $cost(node,action,successor)$ je reálná cena cesty z uzlu $node$ do následnického uzlu $successor$ pomocí akce $action$.\pause
+  \vskip1cm
+  \emph{Věta}: Monotónní heuristika je přípustná.
+\end{frame}
+
+\begin{frame}\frametitle{Optimalita $A^*$}
+  \emph{Věta}: $A^*$ (tree search) je optimální pro přípustné heuristiky.\pause
+
+  \medskip
+
+  \emph{Věta}: $A^*$ (graph search) je optimální pro monotónní heuristiky.\pause
+
+  \medskip
+
+  Idea:\pause
+  \begin{itemize}
+   \item evaluační funkce je neklesající podél libovolné cesty\pause
+   \item kdykoliv je zvolen uzel k expanzi, nejkratší cesta do daného uzlu je již známa
+  \end{itemize}
+\end{frame}
+
+\begin{frame}\frametitle{Vlastnosti $A^*$}
+ \emph{Absolutní chyba} heuristiky ($\Delta$)\pause\ je rozdíl mezi odhadovanou cenou optimálního řešení $h(root)$\pause\ a reálnou cenou optimálního řešení $h^*(root)$.\pause\
+ \emph{Relativní chyba} ($\varepsilon$) je $\Delta/h^*(root)$.\pause
+
+\begin{itemize}
+ \item úplnost:\pause\ ANO (pro konečné grafy)\pause
+%  problém cyklů
+ \item časová složitost:\pause\ obecně $O(b^d)$\pause, resp. $O(b^{\varepsilon d})$ \pause
+ \item paměťová náročnost:\pause\  obecně $O(b^d)$, resp. $O(b^{\varepsilon d})$ \pause
+\end{itemize}
+
+Největším problémem je stále \alert{paměť.}
+ 
+\end{frame}
+
+\begin{frame}\frametitle{$IDA^*, RBFS, SMA$}
+\begin{itemize}
+ \item $IDA^*$\pause\ --- podobné jako IDFS, limitem není hloubka ale hodnota evaluační funkce\pause
+ \item $RBFS$\pause\ --- prohledává nejslibnější větev;\pause\ pamatuje si nejslibnější alternativu;\pause\
+                         pokud cena aktuální větve přesáhne cenu alternativy\pause, aktuální větev zahodí a pokračuje v alternativě;\pause\
+                         má lineární paměťovou složitost\pause
+% Problém přeskakování                         
+ \item $SMA$\pause\ --- lépe využívá dostupnou paměť\pause, uzly zahazuje až ve chvíli, kdy dojde paměť
+\end{itemize}
+\end{frame}
+
+\begin{frame}\frametitle{Heuristiky --- kvalita, přesnost}
+
+Kvalitu heuristiky $h$ lze měřit pomocí tzv. \emph{efektivního faktoru větvení}.\pause\ Efektivní faktor větvení $b(h)$ je nejmenší $b$ takové\pause, že
+algoritmus $A^*$ s danou heuristikou expanduje tolik uzlů\pause, kolik má plný $b$-ární strom výšky $d$\pause, kde $d$ je hloubka optimálního řešení \pause.
+
+\begin{itemize}
+ \item $h(b)$ se bude lišit problém od problému\pause, pro dostatečně těžkou třídu problémů je relativně konstantní\pause
+ \item v důsledku předchozího bodu lze meřit experimentálně\pause
+ \item je-li $h_1\geq h_2$\pause\ (t.j. pro každý uzel $n$ platí $h_1(n)\geq h_2(n)$)\pause, pak $b(h_1)\leq b(h_2)$\pause
+\end{itemize}
+
+Máme-li dvě (přípustné, resp. konzistentní) heuristiky $h_1,h_2$\pause, lze získat novou (přípustnou, resp. konzistentní) heuristiku pomocí
+\begin{displaymath}
+ h(node) = \max\{h_1(node),h_2(node)\}
+\end{displaymath}
+
+
+\end{frame}
+
+\begin{frame}\frametitle{Generování Heuristik --- relaxace}
+% Loydova osmička:
+%   kostku A lze přesunout na 
+\pause
+\begin{itemize}
+ \item řešení problému musí splňovat nějaké podmínky\pause
+ \item uvolněním podmínek získáme typicky jednodušší problém\pause
+ \item řešení jednoduššího problému může být triviální\pause
+ \item takto lze generovat heuristiku --- cena řešení ``uvolněného'' problému\pause
+\end{itemize}
+\emph{Příklad.} Loydova osmička: kostku lze přemístit z políčka $A$ na políčko $B$ pokud\pause
+\begin{itemize}
+  \item políčka spolu sousedí\pause\ a
+  \item políčko $B$ je prázdné\pause
+\end{itemize}
+Relaxací těchto podmínek získáme tři různé problémy (každý jedoduše řešitelný):\pause\
+Kostku lze přemístit z políčka $A$ na políčko $B$ pokud\pause
+\begin{itemize}
+  \item políčka spolu sousedí\pause\ (manhattan metric)\pause\ nebo
+  \item políčko $B$ je prázdné\pause\ nebo
+  \item kdykoliv\pause\ (počet špatně umístěných políček)
+\end{itemize}
+\end{frame}
+\begin{frame}\frametitle{Automatické Generování Heuristik pomocí relaxace}
+\begin{itemize}
+ \item popsaný postup lze zformalizovat a automatizovat\pause
+ \item program ABSOLVER\pause\ (první rozumná heuristika pro Rubikovu kostku, nejlepší heuristika pro Loydovu osmičku)
+\end{itemize}
+\end{frame}
+
+\begin{frame}\frametitle{Generování Heuristik --- databáze vzorů}
+\begin{itemize}
+ \item nalezneme cenu optimálního řešení pro všechny malé ``podproblémy''\pause
+ \item cena daného problému je maximum z cen těch podproblémů, které jsou v něm obsaženy\pause
+ \item obecně cenu nelze sčítat\pause\ v pokud volíme podproblémy opatrně, může se to podařit
+\end{itemize}
+\end{frame}
+
+\begin{frame}\frametitle{Generování Heuristik --- machine learning}
+\begin{itemize}
+ \item zvolíme charakteristiky problému $x_1(p),\ldots,x_n(p)$\pause\ (angl. features)\pause
+ \item vyřešíme mnoho náhodně generovaných problémů $p_1,\ldots,p_N,\ N\approx 10000$\pause\ získáme tím přesnou cenu $c(p_1),\ldots,c(p_N)$
+ \item snažíme se najít nejlepší lineární (případně polynomiální) funkci ``interpolující'' získaná data\pause\ t.j.
+\end{itemize}
+
+hledáme $c_1,k_1,\ldots,c_n,k_n$ tak,\pause abychom minimalizovali
+\begin{displaymath}
+\sum_{i=0}^N c(p_i) - \left(\sum_{j=0}^n c_j x_j(p)^{k_j}\right).
+\end{displaymath}\pause
+
+Získáme tak heuristiku:\pause
+
+\begin{displaymath}
+h(p) = \sum_{j=0}^n c_j x_j(p)^{k_j}.
+\end{displaymath}\pause
+
+\end{frame}
+
+
+
+\end{document}
+
+

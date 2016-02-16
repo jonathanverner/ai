@@ -1,0 +1,128 @@
+\pdfoutput=1
+\documentclass[red,handout,professionalfont]{beamer}
+% \documentclass[red,professionalfont]{beamer}
+\usepackage{multimedia}
+\usepackage{chessboard}
+\usepackage{url}
+\usepackage{amssymb}  % the check symbol 
+\include{pythonlisting}
+\usepackage{tikz}
+\usepackage{tikz-qtree}
+\usetikzlibrary{decorations.pathreplacing,positioning}
+%\bibliography{mujstyl}
+\theoremstyle{definition}
+\newtheorem{definice}{Definition}[section]
+\newtheorem{thm}{Theorem}[section]
+\newtheorem{idea}{Idea}[section]
+\newtheorem{cor}[thm]{Corrollary}
+\newtheorem{lem}[thm]{Lemma}
+\newtheorem{obs}[thm]{Observation}
+\newtheorem{rem}[thm]{Remark}
+\newtheorem{ex}[thm]{Example}
+\newtheorem{quizz}[thm]{Question}
+\newcommand{\pomega}{\mbox{$\mathcal{P}(\omega)$}}
+\newcommand{\cont}{\mbox{$\mathfrak c$}}
+\newcommand{\ba}{\mbox{${\mathbb B}$}}
+\newcommand{\0}{\mbox{${\bf 0}$}}
+\newcommand{\F}{\mbox{${\mathcal F}$}}
+\newcommand{\rest}{\mbox{$\upharpoonright$}}
+\newcommand{\cl}[1]{\mbox{$\overline{#1}$}}
+\newcommand{\yes}{\textcolor{green}{$\checkmark$}}
+\newcommand{\no}{\textcolor{red}{$\times$}}
+\renewcommand{\emph}[1]{{\bf #1}}
+\mode<presentation>
+{
+\useinnertheme{rounded}
+
+\usecolortheme{whale}
+\usecolortheme{orchid}
+
+\setbeamerfont{block title}{size={}}
+
+%   \useoutertheme{default}
+%   \usetheme{Copenhagen}
+%   \useoutertheme{default}
+  \setbeamercovered{invisible}
+}
+\setbeamertemplate{navigation symbols}{} 
+\usepackage[utf8]{inputenc}
+\usepackage[czech,english]{babel}
+\usepackage{lmodern}
+%\usepackage{times}
+\usepackage[T1]{fontenc}
+
+
+\tikzset{onslide/.code args={<#1>#2}{%
+  \only<#1>{\pgfkeysalso{#2}} % \pgfkeysalso doesn't change the path
+}}
+
+\tikzstyle{hilight}=[red,ultra thick]
+\tikzstyle{active}=[yellow,ultra thick]
+\tikzstyle{memory}=[blue]
+
+
+
+\title[]{Bayesovské klasifikátory\\ (11. přednáška)}
+
+% Dnes se podíváme na jednoduché "goal-based" agenty
+% a ukážeme si obecné postupy 
+
+
+% \author[]{Jonathan L. Verner}
+% \institute[Charles University, Prague] % (optional,but mostly needed)
+% {
+%   Department of Logic\\
+  %   Faculty of Philosophy\\
+%   Charles University in Prague
+% }
+\date[]{}
+% \subject{}
+%\pgfdeclareimage[height=1cm]{university-logo}{UK-logo}
+%\logo{\pgfuseimage{university-logo}}
+
+\begin{document}
+
+\AtBeginSection[]
+{
+  \begin{frame}<beamer>
+    \begin{block}{}
+%    \begin{centering}
+    \hfill\insertsection\hfill\
+ %   \end{centering}
+    \end{block}
+    %\tableofcontents[currentsection]
+  \end{frame}
+}
+
+\AtBeginSubsection[]
+{
+  \begin{frame}<beamer>
+    \begin{block}{}
+  %  \begin{centering}
+    \hfill\insertsubsection\hfill\
+   % \begin{centering}
+    \end{block}
+    %\tableofcontents[currentsection]
+  \end{frame}
+}
+
+%#################################################################
+
+\begin{frame}{} \titlepage
+%{\ \hfill \includegraphics[width=1cm]{UK-logo}\hfill\ }
+\end{frame}
+
+\begin{frame}\frametitle{Bayesova věta}
+
+\begin{center}
+\begin{block}{}
+\begin{displaymath}
+ P(A|B) = \frac{P(B|A)\cdot P(A)}{P(B)}
+\end{displaymath}
+\end{block}
+\end{center}
+
+\end{frame}
+
+
+\end{document}

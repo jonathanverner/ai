@@ -1,0 +1,226 @@
+\pdfoutput=1
+% \documentclass[red,handout,professionalfont]{beamer}
+\documentclass[red,professionalfont]{beamer}
+\usepackage{multimedia}
+\usepackage{url}
+\usepackage{amssymb}  % the check symbol 
+\include{pythonlisting}
+\usepackage{tikz}
+\usetikzlibrary{decorations.pathreplacing}
+%\bibliography{mujstyl}
+\theoremstyle{definition}
+\newtheorem{definice}{Definition}[section]
+\newtheorem{thm}{Theorem}[section]
+\newtheorem{idea}{Idea}[section]
+\newtheorem{cor}[thm]{Corrollary}
+\newtheorem{lem}[thm]{Lemma}
+\newtheorem{obs}[thm]{Observation}
+\newtheorem{rem}[thm]{Remark}
+\newtheorem{ex}[thm]{Example}
+\newtheorem{quizz}[thm]{Question}
+\newcommand{\pomega}{\mbox{$\mathcal{P}(\omega)$}}
+\newcommand{\cont}{\mbox{$\mathfrak c$}}
+\newcommand{\ba}{\mbox{${\mathbb B}$}}
+\newcommand{\0}{\mbox{${\bf 0}$}}
+\newcommand{\F}{\mbox{${\mathcal F}$}}
+\newcommand{\rest}{\mbox{$\upharpoonright$}}
+\newcommand{\cl}[1]{\mbox{$\overline{#1}$}}
+\newcommand{\yes}{\textcolor{green}{$\checkmark$}}
+\newcommand{\no}{\textcolor{red}{$\times$}}
+\renewcommand{\emph}[1]{{\bf #1}}
+\mode<presentation>
+{
+\useinnertheme{rounded}
+
+\usecolortheme{whale}
+\usecolortheme{orchid}
+
+\setbeamerfont{block title}{size={}}
+
+%   \useoutertheme{default}
+%   \usetheme{Copenhagen}
+%   \useoutertheme{default}
+  \setbeamercovered{invisible}
+}
+\setbeamertemplate{navigation symbols}{} 
+\usepackage[utf8]{inputenc}
+\usepackage[czech,english]{babel}
+\usepackage{lmodern}
+%\usepackage{times}
+\usepackage[T1]{fontenc}
+
+
+\title[]{Agenti \\ (2. přednáška)}
+% \author[]{Jonathan L. Verner}
+% \institute[Charles University, Prague] % (optional,but mostly needed)
+% {
+%   Department of Logic\\
+%   Faculty of Philosophy\\
+%   Charles University in Prague
+% }
+\date[]{}
+% \subject{}
+%\pgfdeclareimage[height=1cm]{university-logo}{UK-logo}
+%\logo{\pgfuseimage{university-logo}}
+
+\begin{document}
+
+\AtBeginSection[]
+{
+  \begin{frame}<beamer>
+    \begin{block}{}
+%    \begin{centering}
+    \hfill\insertsection\hfill\
+ %   \end{centering}
+    \end{block}
+    %\tableofcontents[currentsection]
+  \end{frame}
+}
+
+\AtBeginSubsection[]
+{
+  \begin{frame}<beamer>
+    \begin{block}{}
+  %  \begin{centering}
+    \hfill\insertsubsection\hfill\
+   % \begin{centering}
+    \end{block}
+    %\tableofcontents[currentsection]
+  \end{frame}
+}
+
+%#################################################################
+
+\begin{frame}{} \titlepage
+%{\ \hfill \includegraphics[width=1cm]{UK-logo}\hfill\ }
+\end{frame}
+
+\begin{frame}\frametitle{Návrh Racionálního Agenta}
+\begin{block}{}
+\begin{displaymath}
+ f: {\mathcal P}^* \to {\mathcal A}
+\end{displaymath}\pause
+\begin{center}
+ Je třeba specifikovat
+\end{center}\pause
+\end{block}
+\begin{itemize}
+ \item možné vjemy (množina $\mathcal P$)\pause
+ \item možné akce (množina $\mathcal A$)\pause
+ \item \alert{prostředí}\pause
+ \item měřítko úspěšnosti
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{Příklady}
+\begin{center}
+{%\tiny
+\hskip-1cm
+\begin{tabular}{p{1.9cm}|p{2cm}|p{2cm}|p{2cm}|p{1cm}}
+ {\bf Agent } & {\bf Vjemy }& {\bf Akce }& {\bf Prostředí } &{\bf Úspěšnost} \\[0.1cm]\pause
+ hráč šachů\pause & tahy protihráče\pause, stav šachovnice\pause & vlastní tahy\pause & Šachovnice\pause & ELO \\[0.5cm]\pause
+ hráč mariáše\pause & tahy protihráče\pause, karty v ruce\pause & vlastní tahy\pause & hospoda\pause & ? \\[0.5cm]\pause
+ autonomní vozidlo\pause & video obraz vozovky\pause, rychlost\pause, GPS\pause, $\ldots$\pause & přidání plynu\pause,  otočení volantem\pause , $\ldots$\pause & vozovka\pause & bezpečnost\pause, spolehlivost\pause, rychlost\cr
+ automatický vysavač\pause & senzor špíny\pause & vysávání, pohyb\pause & byt, kancelář& čistota\pause, hlučnost\pause,vysátá špína\cr
+ \end{tabular}
+}
+\end{center}
+
+\end{frame}
+
+\begin{frame}\frametitle{Klasifikace Prostředí}
+ \begin{itemize}
+  \item plná vs. částečná pozorovatelnost\pause
+  \begin{itemize}
+    \item šachy\pause
+    \item mariáš\pause
+  \end{itemize}
+  \item deterministické vs. stochastické\pause
+  \begin{itemize}
+    \item šachy, mariáš, vysavač\pause
+    \item autonomní vozidlo\pause
+  \end{itemize}
+  \item epizodické vs. sekvenční\pause
+  \begin{itemize}
+   \item epizodické --- následující vjemy nezávislé na předchozích vjemech a akcích\pause\ (př. výstupní kontrola kvality)\pause
+  \end{itemize}
+  \item statické vs. dynamické\pause
+  \begin{itemize}
+   \item mariáš, šachy (bez hodin)\pause
+   \item autonomní vozidlo, šachy
+  \end{itemize}
+\end{itemize}
+\end{frame}
+\begin{frame}\frametitle{Klasifikace Prostředí}
+\begin{itemize}
+  \item diskrétní vs. spojité\pause
+  \begin{itemize}
+   \item šachy, mariáš\pause
+   \item autonomní vozidlo
+  \end{itemize}\pause
+  (Pozor, počítače vždy pracují s \alert{digitálním}, t.j. diskrétním vstupem; je otázka, zda svět samotný není diskrétní.)\pause
+  \item jedno agentní vs. multiagentní\pause
+  \begin{itemize}
+   \item vysavač, šachy\pause
+   \item mariáš, autonomní vozidlo
+  \end{itemize}
+ \end{itemize}
+\end{frame}
+
+\begin{frame}\frametitle{Racionalita}
+\begin{block}{}
+Racionální agent se snaží maximalizovat hodnotící funkci.
+\end{block}\pause
+Chceme hodnotit chování\pause nebo stav prostředí?
+\begin{itemize}
+ \item dobrý vysavač vysaje hodně špíny, hodnotící funkce dává body za vysátou špínu\pause
+ \item[] ideální strategií je vysát špínu, pak ji vysypat, pak zase vysát a tak dokola$\ldots$\pause
+ \item dobrý vysavač udržuje místnost čistou
+\end{itemize}\pause
+
+\begin{block}{}
+ Obecně je lepší hodnotit stav prostředí, často totiž není jasné, jaké chování je dobré.
+\end{block}
+\end{frame}
+
+\begin{frame}\frametitle{Racionalita --- varování}
+Racionální neznamená\pause
+\begin{itemize}
+ \item vševědoucí --- vjemy nemusí poskytnout všechny relevantní informace\pause
+ \item vidící do budoucnosti --- nemůže předvídat výsledky některých akcí\pause
+\end{itemize}
+Tudíž racionální $\neq$ úspěšný.
+\end{frame}
+
+
+\begin{frame}\frametitle{Základní typy agentů}
+ \begin{itemize}
+  \item reflexivní agenti\pause
+  \begin{itemize}
+   \item reagují pouze na aktuální vjem\pause
+   \item pokud vjemy neposkytují dostatečný obraz světa,
+         agent selže\pause
+   \item částečně lze řešit randomizací akcí\pause
+  \end{itemize}
+  \item reflexivní agenti s vnitřním stavem\pause
+  \begin{itemize}
+   \item buduje si model vnějšího světa\pause
+   \item učí se, jak jeho akce ovlivňují svět\pause
+  \end{itemize}
+  \item \uv{goal-based} agenti\pause
+  \begin{itemize}
+  \item agent uvažuje o budoucnosti\pause
+  \item hledá posloupnost akcí, které vedou k dosažení cíle ({\bf plánování})\pause
+  \end{itemize}
+  \item \uv{utility-based} agenti\pause
+  \begin{itemize}
+   \item cíle jsou pouze binární\pause
+   \item cíle jsou často konfliktní\pause
+   \item agent se proto nesnaží dosáhnout cíle, nýbrž maximalizovat
+         ``žádoucnost'' stavu
+  \end{itemize}
+ \end{itemize}
+\end{frame}
+\end{document}
+
+

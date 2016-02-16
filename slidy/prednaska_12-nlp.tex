@@ -1,0 +1,199 @@
+\pdfoutput=1
+% \documentclass[red,handout,professionalfont]{beamer}
+\documentclass[red,professionalfont]{beamer}
+\usepackage{multimedia}
+\usepackage{chessboard}
+\usepackage{url}
+\usepackage{amssymb}  % the check symbol 
+\include{pythonlisting}
+\usepackage{tikz}
+\usepackage{tikz-qtree}
+\usetikzlibrary{decorations.pathreplacing,positioning}
+%\bibliography{mujstyl}
+\theoremstyle{definition}
+\newtheorem{definice}{Definition}[section]
+\newtheorem{thm}{Theorem}[section]
+\newtheorem{idea}{Idea}[section]
+\newtheorem{cor}[thm]{Corrollary}
+\newtheorem{lem}[thm]{Lemma}
+\newtheorem{obs}[thm]{Observation}
+\newtheorem{rem}[thm]{Remark}
+\newtheorem{ex}[thm]{Example}
+\newtheorem{quizz}[thm]{Question}
+\newcommand{\pomega}{\mbox{$\mathcal{P}(\omega)$}}
+\newcommand{\cont}{\mbox{$\mathfrak c$}}
+\newcommand{\ba}{\mbox{${\mathbb B}$}}
+\newcommand{\0}{\mbox{${\bf 0}$}}
+\newcommand{\F}{\mbox{${\mathcal F}$}}
+\newcommand{\rest}{\mbox{$\upharpoonright$}}
+\newcommand{\cl}[1]{\mbox{$\overline{#1}$}}
+\newcommand{\yes}{\textcolor{green}{$\checkmark$}}
+\newcommand{\no}{\textcolor{red}{$\times$}}
+\renewcommand{\emph}[1]{{\bf #1}}
+\mode<presentation>
+{
+\useinnertheme{rounded}
+
+\usecolortheme{whale}
+\usecolortheme{orchid}
+
+\setbeamerfont{block title}{size={}}
+
+%   \useoutertheme{default}
+%   \usetheme{Copenhagen}
+%   \useoutertheme{default}
+  \setbeamercovered{invisible}
+}
+\setbeamertemplate{navigation symbols}{} 
+\usepackage[utf8]{inputenc}
+\usepackage[czech,english]{babel}
+\usepackage{lmodern}
+%\usepackage{times}
+\usepackage[T1]{fontenc}
+
+
+\tikzset{onslide/.code args={<#1>#2}{%
+  \only<#1>{\pgfkeysalso{#2}} % \pgfkeysalso doesn't change the path
+}}
+
+\tikzstyle{hilight}=[red,ultra thick]
+\tikzstyle{active}=[yellow,ultra thick]
+\tikzstyle{memory}=[blue]
+
+
+
+\title[]{Natural Language Processing\\ (11. přednáška)}
+
+% Dnes se podíváme na jednoduché "goal-based" agenty
+% a ukážeme si obecné postupy 
+
+
+% \author[]{Jonathan L. Verner}
+% \institute[Charles University, Prague] % (optional,but mostly needed)
+% {
+%   Department of Logic\\
+  %   Faculty of Philosophy\\
+%   Charles University in Prague
+% }
+\date[]{}
+% \subject{}
+%\pgfdeclareimage[height=1cm]{university-logo}{UK-logo}
+%\logo{\pgfuseimage{university-logo}}
+
+\begin{document}
+
+\AtBeginSection[]
+{
+  \begin{frame}<beamer>
+    \begin{block}{}
+%    \begin{centering}
+    \hfill\insertsection\hfill\
+ %   \end{centering}
+    \end{block}
+    %\tableofcontents[currentsection]
+  \end{frame}
+}
+
+\AtBeginSubsection[]
+{
+  \begin{frame}<beamer>
+    \begin{block}{}
+  %  \begin{centering}
+    \hfill\insertsubsection\hfill\
+   % \begin{centering}
+    \end{block}
+    %\tableofcontents[currentsection]
+  \end{frame}
+}
+
+%#################################################################
+
+\begin{frame}{} \titlepage
+%{\ \hfill \includegraphics[width=1cm]{UK-logo}\hfill\ }
+\end{frame}
+
+\begin{frame}\frametitle{Intro (coursera.org)}
+
+\begin{center}
+\begin{block}{}
+\url{https://class.coursera.org/nlp/lecture/preview_view/124}
+\end{block}
+\end{center}
+
+\end{frame}
+
+\begin{frame}\frametitle{Aplikace: detekce plagiátů}
+Dva možné přístupy:\pause
+\begin{itemize}
+ \item analýza dokumentu\pause
+ \begin{itemize}
+ \item stylometrie\pause (autorský invariant\pause, genetické algoritmy)\pause
+ \item neuronové sítě
+  \item porovnávání dokumentu s databází jiných dokumentů
+ \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{Porovnávání dokumentů: Špatný přístup}
+Chceme zjistit, zda mají dva dokumenty společné části.\pause
+\begin{python}
+def longest_match(A,B):
+  ret = ''
+  i=0
+  while A[i] == B[i]:
+    ret += A[i]
+    i += 1
+  return ret
+
+def common( A, B ):
+  longest = ''
+  for a_pos in len(A):
+    for b_pos in len(B):
+      m = longest_match(A[a_pos:], B[b_pos:])
+      if len(m) > longest:
+        longest = m
+\end{python}
+\end{frame}
+
+\begin{frame}\frametitle{Porovnávání dokumentů: Dynamické programování}
+\begin{block}{}
+ Pro každou dvojici prefixů spočti nejdelší společný suffix. Nejdelší ze všech
+ těchto suffixů je nejdelší společný string dvou dokumentů
+\end{block}\pause
+
+\begin{center}
+\emph{Složitost} $O(nm)$
+\end{center}
+\end{frame}
+
+\begin{frame}\frametitle{Porovnávání dokumentů: Suffix trees}
+\begin{itemize}
+ \item stromová struktura odpovídající řetězci\pause
+ \item hrany stromu jsou ohodnoceny podřetězci\pause
+ \item každý suffix odpovídá právě jedné cestě od kořenu k listu\pause
+ \item umožňují rychle provádět se striny některé operace\pause
+ \item zobecnění umožňuje najít LCS v čase $O(n+m)$!
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}\frametitle{Porovnávání dokumentů: ``otisky''}
+Ke každému dokumentu si uložím množinu všech $n$-gramů
+\begin{itemize}
+ \item 
+\end{itemize}
+\end{frame}
+
+\begin{frame}\frametitle{Winnowing}
+\end{frame}
+
+\begin{frame}\frametitle{Nepodstatné změny}
+\end{frame}
+
+
+
+
+
+
+
+\end{document}

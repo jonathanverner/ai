@@ -1,0 +1,361 @@
+\pdfoutput=1
+% \documentclass[red,handout,professionalfont]{beamer}
+\documentclass[red,professionalfont]{beamer}
+\usepackage{multimedia}
+\usepackage{chessboard}
+\usepackage{url}
+\usepackage{amssymb}  % the check symbol 
+\include{pythonlisting}
+\usepackage{tikz}
+\usepackage{tikz-qtree}
+\usetikzlibrary{decorations.pathreplacing,positioning}
+%\bibliography{mujstyl}
+\theoremstyle{definition}
+\newtheorem{definice}{Definition}[section]
+\newtheorem{thm}{Theorem}[section]
+\newtheorem{idea}{Idea}[section]
+\newtheorem{cor}[thm]{Corrollary}
+\newtheorem{lem}[thm]{Lemma}
+\newtheorem{obs}[thm]{Observation}
+\newtheorem{rem}[thm]{Remark}
+\newtheorem{ex}[thm]{Example}
+\newtheorem{quizz}[thm]{Question}
+\newcommand{\pomega}{\mbox{$\mathcal{P}(\omega)$}}
+\newcommand{\cont}{\mbox{$\mathfrak c$}}
+\newcommand{\ba}{\mbox{${\mathbb B}$}}
+\newcommand{\0}{\mbox{${\bf 0}$}}
+\newcommand{\F}{\mbox{${\mathcal F}$}}
+\newcommand{\rest}{\mbox{$\upharpoonright$}}
+\newcommand{\cl}[1]{\mbox{$\overline{#1}$}}
+\newcommand{\yes}{\textcolor{green}{$\checkmark$}}
+\newcommand{\no}{\textcolor{red}{$\times$}}
+\renewcommand{\emph}[1]{{\bf #1}}
+\mode<presentation>
+{
+\useinnertheme{rounded}
+
+\usecolortheme{whale}
+\usecolortheme{orchid}
+
+\setbeamerfont{block title}{size={}}
+
+%   \useoutertheme{default}
+%   \usetheme{Copenhagen}
+%   \useoutertheme{default}
+  \setbeamercovered{invisible}
+}
+\setbeamertemplate{navigation symbols}{} 
+\usepackage[utf8]{inputenc}
+\usepackage[czech,english]{babel}
+\usepackage{lmodern}
+%\usepackage{times}
+\usepackage[T1]{fontenc}
+
+
+\tikzset{onslide/.code args={<#1>#2}{%
+  \only<#1>{\pgfkeysalso{#2}} % \pgfkeysalso doesn't change the path
+}}
+
+\tikzstyle{hilight}=[red,ultra thick]
+\tikzstyle{active}=[yellow,ultra thick]
+\tikzstyle{memory}=[blue]
+
+
+
+\title[]{Prolog\\ (9. přednáška)}
+
+% Dnes se podíváme na jednoduché "goal-based" agenty
+% a ukážeme si obecné postupy 
+
+
+% \author[]{Jonathan L. Verner}
+% \institute[Charles University, Prague] % (optional,but mostly needed)
+% {
+%   Department of Logic\\
+  %   Faculty of Philosophy\\
+%   Charles University in Prague
+% }
+\date[]{}
+% \subject{}
+%\pgfdeclareimage[height=1cm]{university-logo}{UK-logo}
+%\logo{\pgfuseimage{university-logo}}
+
+\begin{document}
+
+\AtBeginSection[]
+{
+  \begin{frame}<beamer>
+    \begin{block}{}
+%    \begin{centering}
+    \hfill\insertsection\hfill\
+ %   \end{centering}
+    \end{block}
+    %\tableofcontents[currentsection]
+  \end{frame}
+}
+
+\AtBeginSubsection[]
+{
+  \begin{frame}<beamer>
+    \begin{block}{}
+  %  \begin{centering}
+    \hfill\insertsubsection\hfill\
+   % \begin{centering}
+    \end{block}
+    %\tableofcontents[currentsection]
+  \end{frame}
+}
+
+%#################################################################
+
+\begin{frame}{} \titlepage
+%{\ \hfill \includegraphics[width=1cm]{UK-logo}\hfill\ }
+\end{frame}
+
+\begin{frame}\frametitle{Syntax prologu --- stavební kameny}
+\begin{description}
+ \item[predikáty] začínají malým písmenem, mohou obsahovat číslice a podtržítka\pause
+ \item[funkce] začínají malým písmenem, mohou obsahovat číslice a podtržítka\pause
+ \item[konstanty] (nulární predikáty)\pause
+ \item[proměnné] začínají velkým písmenem nebo podtržítkem\pause
+
+ \item[spojky] {\tt :-} (implikace)\pause, {\tt ,} (konjunkce)\pause, {\tt ;} (disjunkce)\pause, {\tt =} (rovnost)
+\end{description}
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{Syntax prologu --- statements}
+\alert{Fakta}\pause
+\begin{verbatim}
+ muz(adam).
+ zena(eva).
+ manzel(adam,eva).
+ rodic(adam,abel).
+ rodic(eva,abel).
+\end{verbatim}\pause
+\alert{Procedury/Pravidla}\pause\ ({\tt Hlava :- Klauzule })\pause
+\\
+{\tt
+ matka(M,D) :- rodic(M,D), zena(M).\\
+ otec(O,D) :- rodic(O,D), muz(O).\pause\\
+ sourozenec(X,Y) :- rodic(R,X), rodic(R,Y).\pause\\
+ vlastni\_sourozenec(X,Y) :-\\
+\hskip1cm       otec(O,X), otec(O,Y),\\
+\hskip1cm       matka(M,X), matka(M,Y).\pause\\
+}
+\begin{block}{}
+Prologovský program je seznam (databáze) faktů a procedur. 
+\end{block}
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{Interakce s prologem}
+\begin{itemize}
+ \item Načteme databázi faktů ({\tt consult}).\pause
+ \item Klademe dotazy\pause
+\end{itemize}
+\begin{block}{}
+ \begin{center}
+  Příklad interakce
+ \end{center}
+\end{block}\pause
+{\tt
+1 ?-\pause\ consult(genealogy).\pause\\
+\% genealogy compiled 0.00 sec, 10 clauses\\
+true.\\
+\
+\\
+2 ?-\pause\ rodic(adam,abel).\pause\\
+true.\\
+\
+\\
+3 ?-\pause\ rodic(X,abel).\pause\\
+X = adam\pause\ ;\pause\\
+X = eva.\\
+\
+\\
+4 ?-
+}
+\end{frame}
+
+\begin{frame}\frametitle{Hledání důkazu}
+ \begin{itemize}
+  \item unifikace\pause
+  \item prohledávání do hloubky a ``backtracking''\pause
+ \end{itemize}
+\begin{block}{}
+ \begin{center}
+      {\tt sourozenec(X,abel)}
+ \end{center}
+\end{block}\pause
+
+ \begin{itemize}
+  \item prochází databázi a snaží se unifikovat sourozenec(X,abel) s ``hlavou'' nějakého faktu, nebo pravidla (procedury).\pause
+  \item pokud se mu podaří unifikace s faktem, uspěl.\pause
+  \item pokud se mu podaří unifikace s hlavou pravidla, pokusí se rekurzivně provést totéž s jednotlivými klauzulemi pravidla\pause
+ \end{itemize}
+{\tiny\tt
+Cíl: sourozenec(X,abel)\pause\\
+\hskip0.5cm  sourozenec(X,abel) = sourozenec(X,Y) / [Y=abel]\pause\\
+\hskip1cm    Cíl: rodic(R,X), rodic(R, Y) / [Y=abel]\pause\\
+\hskip1.5cm      rodic(R,X) = rodic(adam,kain) / [Y=abel,R=adam,X=kain]\pause\\
+\hskip2cm        Cíl: rodic(R,Y) / [Y=abel,R=adam,X=kain]\pause\\
+\hskip2.5cm           rodic(R,Y) = rodic(adam,abel) / [Y=abel,R=adam,X=kain]\pause\\
+\hskip2.5cm           \alert{ÚSPĚCH}\pause\\
+}
+\begin{itemize}
+ \item chtěli bychom, aby neplatilo {\tt sourozenec(abel,abel)};\pause\ to však nelze zapsat hornovskou klauzulí;\pause\ je třeba použít operátor řezu (viz dále).
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}\frametitle{Rekurze --- dobrý sluha}
+{\tt
+\alt<5,12>{\alert{predek(X,Y)}}{predek(X,Y)}:-\alt<6,13>{\alert{rodic(X,Y)}}{rodic(X,Y)}.\pause\\
+\alt<8>{\alert{predek(X,Y)}}{predek(X,Y)}:-\alt<9>{\alert{rodic(Z,Y),predek(X,Z)}}{rodic(Z,Y),predek(X,Z)}.
+}\pause
+\begin{block}{}
+\begin{center}
+{\tt predek(adam,tubal)}
+\end{center}
+\end{block}\pause
+{\tiny\tt
+Cíl: predek(adam,tubal)\pause\\
+\hskip0.5cm  predek(adam,tubal) = \alt<5>{\alert{predek(X,Y) / [X=adam,Y=tubal]}}{predek(X,Y) / [X=adam,Y=tubal]}\pause\\
+\hskip1cm    Cíl: \alt<6>{\alert{rodic(X,Y) / [X=adam,Y=tubal]}}{rodic(X,Y) / [X=adam,Y=tubal]}\pause\\
+\hskip1.5cm    \alert{FAIL}\pause\\
+\hskip0.5cm  predek(adam,tubal) = \alt<8>{\alert{predek(X,Y) / [X=adam,Y=tubal]}}{predek(X,Y) / [X=adam,Y=tubal]}\pause\\
+\hskip1cm    Cíl: \alt<9>{\alert{rodic(Z,Y), predek(X,Z) / [X=adam,Y=tubal]}}{\alt<10>{\textcolor{blue}{rodic(Z,Y)}}{\textcolor{green}{rodic(Z,Y)}}, 
+                                                                              \alt<12-14>{\textcolor{blue}{predek(X,Z)}}{\alt<15->{\textcolor{green}{predek(X,Z)}}{predek(X,Z)}}
+                                                                              / [X=adam,Y=tubal]}\pause\\
+\hskip1.5cm    rodic(Z,Y) = rodic(kain,tubal) / [Z=kain,Y=tubal,X=adam]\pause\\
+\hskip2cm         \textcolor{green}{O.K.}\pause\\
+\hskip1.5cm    predek(X,Z) = \alt<12>{\alert{predek(X,Y1) / [ Z=kain,X=adam, Y1=Z, Y=tubal ]}}{predek(X,Y1) / [ Z=kain,X=adam, Y1=Z, Y=tubal ]}\pause\\
+\hskip2cm         Cíl: \alt<13>{\alert{rodic(X,Y1) / [ Z=kain,X=adam, Y1=Z, Y=tubal ]}}{rodic(X,Y1) / [ Z=kain,X=adam, Y1=Z, Y=tubal ]}\pause\\
+\hskip2.5cm          rodic(X,Y1) = rodic(adam,kain)\pause\\
+\hskip3cm	       \textcolor{green}{O.K.}\pause\\
+\hskip1.5cm	       \textcolor{green}{ÚSPĚCH}
+}
+\end{frame}
+\begin{frame}\frametitle{Rekurze --- zlý pán}
+ {\tt
+\alt<5,10,15>{\alert{predek(X,Y)}}{predek(X,Y)}:-\alt<6,11,16>{\alert{rodic(X,Y)}}{rodic(X,Y)}.\pause\\
+\alt<8,13,18>{\alert{predek(X,Y)}}{predek(X,Y)}:-\alt<9,14,19>{\alert{predek(X,Z),rodic(Z,Y)}}{predek(X,Z),rodic(Z,Y)}.
+}\pause
+
+\begin{block}{}
+\begin{center}
+{\tt predek(adam,tubal)}
+\end{center}
+\end{block}\pause
+{\tiny\tt
+Cíl: predek(adam,tubal)\pause\\
+\hskip0.5cm  predek(adam,tubal) = predek(X,Y) / [X=adam,Y=tubal]\pause\\
+\hskip1cm    Cíl: rodic(X,Y) / [X=adam,Y=tubal]\pause\\
+\hskip1.5cm    \alert{FAIL}\pause\\
+\hskip0.5cm  predek(adam,tubal) = predek(X,Y) / [X=adam,Y=tubal]\pause\\
+\hskip1cm    Cíl: predek(X,Z), rodic(Z,Y) / [X=adam,Y=tubal]\pause\\
+\hskip1.5cm    predek(X,Z) = predek(X,Y1) / [X=adam,Y=tubal]\pause\\
+\hskip2cm        Cíl: rodic(X,Y1) / [X=adam,Y=tubal]\pause\\
+\hskip2.5cm	  \alert{FAIL}\pause\\
+\hskip1.5cm    predek(X,Z) = predek(X,Y1) / [X=adam,Y=tubal]\pause\\
+\hskip2cm        Cíl: predek(X,Z1), rodic(Z1,Y) / [X=adam,Y=tubal]\pause\\
+\hskip2.5cm        predek(X,Z1) = predek(X,Y1) / [ X=adam, Y=tubal ]\pause\\
+\hskip3cm            Cíl: rodic(X,Y1) / [ X=adam,Y=tubal ]\pause\\
+\hskip3.5cm	       \alert{FAIL}\pause\\
+\hskip2.5cm        predek(X,Z1) = predek(X,Y1) / [ X=adam, Y=tubal ]\pause\\
+\hskip3cm            Cíl: predek(X,Z2),rodic(Z2,Y1) / [ X=adam,Y=tubal ]\pause\\
+\hskip3.5cm		\alert{$\ldots$}
+}
+\end{frame}
+\begin{frame}\frametitle{Seznamy}
+\begin{itemize}
+ \item {\tt [1,2,3,4,5]}\pause
+ \item {\tt [H|T]}\pause
+\end{itemize}
+ \vskip0.7cm
+\alert{Příklad:} Predikát býti prvkem.\pause\\
+{\tt
+ contains(X,[X]).\pause\\
+ contains(X,[X|\_]).\pause\\
+ contains(X,[\_|T]):-contains(X,T).\pause\\
+ }
+ \vskip0.7cm
+ \alert{Cvičení}\pause
+\begin{itemize}
+ \item[1] Predikát konkatenace dvou seznamů.\pause
+ \item[2] Predikát otočení seznamu.\pause
+ \item[3] Predikát vybrání lichých prvků.
+\end{itemize}
+\end{frame}
+
+\begin{frame}\frametitle{Operátor řezu}
+\begin{itemize}
+ \item predikát sourozenci nebyl správně\pause
+ \item chtěli bychom klauzuli zajišťující $X \neq Y $\pause
+ \item lze zařídit pomocí operátoru řezu\pause\ a predikátu {\tt fail}\pause
+\end{itemize}
+{\tt
+  test(X,Y):-test1(X,Y),!,test2(X,Y)\pause\\
+}
+\vskip0.7cm
+\begin{center}
+Význam\pause
+\end{center}
+\begin{itemize}
+ \item nebacktrackuj přes {\tt !}\pause
+ \item t.j. pokud v téhle větvi neuspěješ, nesnaž se hlavu splnit jinak\pause
+\end{itemize}
+\vskip0.4cm
+{\tt
+  different(X,X):-!,fail.\pause\\
+  different(\_,\_).\pause\\
+  sourozenec(X,Y) :- rodic(R,X), rodic(R,Y), different(X,Y).\pause\\
+}
+\end{frame}
+
+\begin{frame}\frametitle{Robinsonova Aritmetika}
+
+\begin{itemize}
+ \item[1] numerály (za pomoci $0$, $s$)
+ \item[2] $+,*$
+ \item[3] $\leq$
+ \item[4] prvočíselnost
+ \item[5] rozklad na prvočinitele
+\end{itemize}
+\end{frame}
+
+\begin{frame}\frametitle{NLP --- Natural Language Processing}
+\begin{itemize}
+ \item Rozdílové seznamy
+ \item Sentence --> NounPhrase VerbPhrase
+ \item NounPhrase --> Adjective1, Adjective2, ..., Adjectiven, Noun
+ \item VerbPhrase --> Verb
+ \item VerbPhrase --> Verb NounPhrase
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}\frametitle{Více $\ldots$}
+\begin{center}
+ \emph{Výuka}\pause
+\end{center}
+P. Švarný: Logical Programming\pause
+\vskip1cm
+\begin{center}
+ \emph{Internetové zdroje}\pause
+\end{center}
+{\tt
+ \url{http://www.learnprolognow.org/}\pause\
+ \url{http://www.amzi.com/AdventureInProlog/}\pause\
+ \url{http://ksvi.mff.cuni.cz/\~kryl/prolog.pdf}\pause\
+ }
+ \begin{center}
+   \emph{Knižní zdroje}\pause
+ \end{center}
+ Jirků, P. a kol.: Programování v jazyku Prolog, Praha 1991\\
+ Ivan Bratko: Prolog Programming for Artificial Intelligence, 1986\\
+\end{frame}
+
+
+
+
+\end{document}

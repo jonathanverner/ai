@@ -1,0 +1,396 @@
+\pdfoutput=1
+% \documentclass[red,handout,professionalfont]{beamer}
+\documentclass[red,professionalfont]{beamer}
+\usepackage{multimedia}
+\usepackage{chessboard}
+\usepackage{url}
+\usepackage{amssymb}  % the check symbol 
+\include{pythonlisting}
+\usepackage{tikz}
+\usepackage{tikz-qtree}
+\usetikzlibrary{decorations.pathreplacing,positioning}
+%\bibliography{mujstyl}
+\theoremstyle{definition}
+\newtheorem{definice}{Definition}[section]
+\newtheorem{thm}{Theorem}[section]
+\newtheorem{idea}{Idea}[section]
+\newtheorem{cor}[thm]{Corrollary}
+\newtheorem{lem}[thm]{Lemma}
+\newtheorem{obs}[thm]{Observation}
+\newtheorem{rem}[thm]{Remark}
+\newtheorem{ex}[thm]{Example}
+\newtheorem{quizz}[thm]{Question}
+\newcommand{\pomega}{\mbox{$\mathcal{P}(\omega)$}}
+\newcommand{\cont}{\mbox{$\mathfrak c$}}
+\newcommand{\ba}{\mbox{${\mathbb B}$}}
+\newcommand{\0}{\mbox{${\bf 0}$}}
+\newcommand{\F}{\mbox{${\mathcal F}$}}
+\newcommand{\rest}{\mbox{$\upharpoonright$}}
+\newcommand{\cl}[1]{\mbox{$\overline{#1}$}}
+\newcommand{\yes}{\textcolor{green}{$\checkmark$}}
+\newcommand{\no}{\textcolor{red}{$\times$}}
+\renewcommand{\emph}[1]{{\bf #1}}
+\mode<presentation>
+{
+\useinnertheme{rounded}
+
+\usecolortheme{whale}
+\usecolortheme{orchid}
+
+\setbeamerfont{block title}{size={}}
+
+%   \useoutertheme{default}
+%   \usetheme{Copenhagen}
+%   \useoutertheme{default}
+  \setbeamercovered{invisible}
+}
+\setbeamertemplate{navigation symbols}{} 
+\usepackage[utf8]{inputenc}
+\usepackage[czech,english]{babel}
+\usepackage{lmodern}
+%\usepackage{times}
+\usepackage[T1]{fontenc}
+
+
+\tikzset{onslide/.code args={<#1>#2}{%
+  \only<#1>{\pgfkeysalso{#2}} % \pgfkeysalso doesn't change the path
+}}
+
+\tikzstyle{hilight}=[red,ultra thick]
+\tikzstyle{active}=[yellow,ultra thick]
+\tikzstyle{memory}=[blue]
+
+
+
+\title[]{CSP \\ (6. přednáška)}
+
+% Dnes se podíváme na jednoduché "goal-based" agenty
+% a ukážeme si obecné postupy 
+
+
+% \author[]{Jonathan L. Verner}
+% \institute[Charles University, Prague] % (optional,but mostly needed)
+% {
+%   Department of Logic\\
+  %   Faculty of Philosophy\\
+%   Charles University in Prague
+% }
+\date[]{}
+% \subject{}
+%\pgfdeclareimage[height=1cm]{university-logo}{UK-logo}
+%\logo{\pgfuseimage{university-logo}}
+
+\begin{document}
+
+\AtBeginSection[]
+{
+  \begin{frame}<beamer>
+    \begin{block}{}
+%    \begin{centering}
+    \hfill\insertsection\hfill\
+ %   \end{centering}
+    \end{block}
+    %\tableofcontents[currentsection]
+  \end{frame}
+}
+
+\AtBeginSubsection[]
+{
+  \begin{frame}<beamer>
+    \begin{block}{}
+  %  \begin{centering}
+    \hfill\insertsubsection\hfill\
+   % \begin{centering}
+    \end{block}
+    %\tableofcontents[currentsection]
+  \end{frame}
+}
+
+%#################################################################
+
+\begin{frame}{} \titlepage
+%{\ \hfill \includegraphics[width=1cm]{UK-logo}\hfill\ }
+\end{frame}
+
+\begin{frame}\frametitle{Kdo chová zebru?}
+
+{\tiny
+\begin{itemize}
+\item[1.] There are five houses.
+\item[2.] The Englishman lives in the red house.
+\item[3.] The Spaniard owns the dog.
+\item[4.] Coffee is drunk in the green house.
+\item[5.] The Ukrainian drinks tea.
+\item[6.] The green house is immediately to the right of the ivory house.
+\item[7.] The Old Gold smoker owns snails.
+\item[8.] Kools are smoked in the yellow house.
+\item[9.] Milk is drunk in the middle house.
+\item[10.] The Norwegian lives in the first house.
+\item[11.] The man who smokes Chesterfields lives in the house next to the man with the fox.
+\item[12.] Kools are smoked in a house next to the house where the horse is kept.
+\item[13.] The Lucky Strike smoker drinks orange juice.
+\item[14.] The Japanese smokes Parliaments.
+\item[15.] The Norwegian lives next to the blue house. 
+\end{itemize}\pause
+
+Now, who drinks water? Who owns the zebra? In the interest of clarity, it must be added that each of the five houses is painted a different color, and their inhabitants are of different national extractions, own different pets, drink different beverages and smoke different brands of American cigarets [sic]. One other thing: in statement 6, right means your right.
+
+{\it \hfill — Life International, December 17, 1962}
+
+}
+
+\end{frame}
+
+\begin{frame}\frametitle{CSP --- Constraint Satisfaction Problem}
+\begin{description}
+ \item[$X_0,\ldots X_n$] proměnné\pause
+ \item[$D_0,\ldots,D_n$] obory hodnot jednotlivých proměnných\pause
+ \item[$C_0,\ldots,C_k$] omezující podmínky,\pause\ $C_i = (A_i,R_i)$\pause\ kde
+ \item[$A_i$] $=\{j_0,\ldots,j_{l_i}\}\subseteq n+1$,\pause\ seznam proměnných vstupujících do této podmínky\pause
+ \item[$R_i$] $\subseteq D_{j_0}\times\cdots\times D_{j_{l_i}}$\pause\  povolené hodnoty proměnných\pause
+\end{description}
+\begin{center}
+ CSP
+\end{center}\pause
+% \begin{block}{}
+Nalezněte ohodnocení proměnných $x_0,\ldots,x_n$\pause\ hodnotami $v_0,\ldots,v_n$ z odpovídajích oborů hodnot\pause\ splňující
+všechny omezující podmínky,\pause\ t.j. $(v_{j_0},\ldots,v_{j_{l_i}})\in R_i$ pro každé $i=0,\ldots,k$.
+% \end{block}
+\end{frame}
+
+\begin{frame}\frametitle{Zebra formulovaná jako CSP}
+\begin{center}
+Proměnné
+\end{center}\pause
+yellow, blue, red, ivory, green, norwegian, ukrainian, englishman, spaniard, japanese, water, tea, milk, orange juice, coffee, 
+kools, chesterfield, old gold, lucky strike, parliament fox,  horse, snails, dog, zebra\pause
+\begin{center}
+Obory hodnot\pause
+\vskip 2mm
+$\{1,2,3,4,5\}$
+
+{\tiny (odpovídají jednotlivým domům)}
+
+\end{center}\pause
+
+\begin{center}
+ Omezující podmínky\pause
+ \vskip2mm
+{\tiny
+\begin{minipage}{5cm}
+\begin{itemize}
+\item[2.]<6-> The Englishman lives in the red house.
+\item[3.]<8-> The Spaniard owns the dog.
+\item[$\ldots$]<10->\ 
+\item[15.]<11-> The Norwegian lives next to the blue house. 
+\item[A]<13-> it must be added that each of the five houses is painted a different color
+\item[$\ldots$]<15->\ 
+\end{itemize}\pause
+\end{minipage}
+\begin{minipage}{5.2cm}
+\begin{itemize}
+ \item[2.]<7-> englishman = red
+ \item[3.]<9-> spaniard = dog
+ \item[$\ldots$]<10->\ 
+ \item[15.]<12-> norwegian = blue + 1 or norwegian = blue - 1
+ \item[A]<14-> proměnné yellow, blue, red, ivory, green mají každá jinou hodnotu
+ \item[$\ldots$]<15->\ 
+\end{itemize}
+\end{minipage}
+}
+\end{center}
+
+\end{frame}
+
+\begin{frame}\frametitle{Další CSP problémy}
+ \begin{itemize}
+  \item[] Sudoku\pause
+  \item[] obarvení grafu\pause
+  \item[] umístění dam na šachovnici\pause
+  \item[] křížovky\pause
+  \item[] \emph{SAT}\pause
+  \item[] BID (building identification problem)\pause
+  \item[] rozvrhování, plánování $\ldots$
+ \end{itemize}
+\end{frame}
+
+
+\begin{frame}[fragile]\frametitle{CSP Solver: Backtracking}
+\begin{python}[basicstyle=\ttfamily\tiny\setstretch{1}]
+def CSPBackTrackSolver(problem, partial_assignment):
+  var = selectUnassignedVar(problem, partial_assignment)
+  
+  # pokud jsou vsechny promenne prirazene, uspeli jsme
+  if var is None:
+    return partial_assignment
+
+  for val in problem.domain(var):
+      partial_assignment[var] = val
+      
+      # pokud jsme stale konzistentni, rekurzivne hledame dal
+      if problem.isConsistent(partial_assignment):
+        ret = CSPBackTrackSolver(problem, partial_assignment)
+        
+        # hura, nasli jsme reseni
+        if ret:
+          return ret
+  return None
+\end{python}
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{CSP Solver: Zlepšení}
+ \begin{itemize}
+  \item vhodně volit pořadí přiřazování proměnných ({\tt selectUnassignedVar})\pause
+  \item vhodně volit pořadí hodnot\pause
+  \item neprocházet neperspektivní hodnoty (\emph{constraint propagation})\pause
+  \item vynechávat podstromy, o kterých víme, že jsou neperspektivní (\emph{backjumping})\pause
+ \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{Pořadí proměnných --- {\tt selectUnassignedVar}}
+\begin{block}{}
+Zvolme proměnnou, která má nejméně možných přiřazení konzistentních s aktuálním přiřazením.
+\end{block}\pause
+\begin{itemize}
+ \item spolu s v přiřazení si budeme pro proměnné pamatovat konzistentní hodnoty: {\tt pa.restricted} ---
+       seznam dvojic (proměnná, množina legálních hodnot)\pause
+ \item při každém přiřazení je třeba aktualizovat {\tt pa.restricted}
+\end{itemize}\pause
+
+\begin{python}[basicstyle=\ttfamily\tiny\setstretch{1}]
+def selectUnassignedVar(problem, partial_assignment):
+  if len(partial_assignment.restricted()) > 0:
+    var, dom = min(partial_assignment.restricted, 
+                   key = lambda (var,dom): len(dom))
+    return var
+  else:
+    for var in problem.vars:
+      if var not in partial_assignment:
+        return var
+  return None
+\end{python}
+
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{Constraint propagation}
+\begin{itemize}
+ \item založeno na pojmu tzv. 2-konzistence\pause
+ \item pro jednoduchost předpokládejme, že všechny omezující podmínky jsou binární\pause
+ \item obecný případ lze převést na binární podmínky,\pause\ za cenu zvýšení počtu proměnných\pause\ (cvičení)\pause
+\end{itemize}
+
+Definujme tzv. \emph{constraint graph}
+\begin{description}
+ \item[vrcholy] --- jednotlivé proměnné\pause
+ \item[hrany]   --- jednotlivé omezení (dvě proměnné jsou spojeny hranou, pokud figurují v nějaké omezující podmínce)
+\end{description}\pause
+
+Omezené obory hodnot proměnných jsou \emph{2-konzistentní}, pokud je každé částečné přiřazení definované na
+dvou proměnných\pause\ (a mající hodnoty v těchto omezených oborech)\pause\ konzistentní.
+
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{Constraint propagation --- implementace}
+
+\begin{python}[basicstyle=\ttfamily\tiny\setstretch{1}] 
+ def assignAndReduce(problem, partial_assignment, var,val):
+ """ Rozsiri partial_assignment o var=val a aktualizuje 
+     partial_assignment.restricted """
+  import copy
+  ret_assignment = copy.deepcopy(partial_assignment)
+  ret_assignment[var]=val
+  work = []
+  for cvar in problem.constrainedby(var):
+    work.append((var,cvar))
+
+  while len(work) > 0:
+    (vA,vB) = work.pop()
+    if vA in ret_assignment:
+      restricted, consistent = restrict(problem, ret_assignment, vA, vB)
+      if not consistent:
+        return None
+      if restricted:
+        for cvar in problem.constrainedby(vB):
+        if not cvar == vA:
+          work.append((vB,cvar))
+  return ret_assignment
+\end{python}
+
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{Constraint propagation --- implementace (pokračování)}
+\begin{python}[basicstyle=\ttfamily\tiny\setstretch{1}] 
+ def restrict(problem, ret_assignment, vA, vB):
+ """ Aktualizuje partial_assignment.restricted pro promennou vB
+     na zaklade omezeneho oboru hodnot promenne vA."""
+\end{python}\pause
+\begin{python}[basicstyle=\ttfamily\tiny\setstretch{1}]     
+  if varB not in assignment.restricted:
+    dom = assignment.restricted[varB] = set(problem.domain(varB))
+  else:
+    dom = assignment.restricted[varB]
+\end{python}\pause
+\begin{python}[basicstyle=\ttfamily\tiny\setstretch{1}]  
+  # Hodnoty, ktere budeme zahazovat
+  removed = set([])
+  for valB in dom:
+    # Pokud neexistuje zadne legalni prirazeni promenné A tak,
+    # aby nejaka omezujici podminka na A a B nezakazovala hodnotu valB
+    # tak hodnotu valB vyhodime
+    if not isLegal(problem, assignment, varA, varB, valB):
+      removed.add(valB)
+\end{python}\pause
+\begin{python}[basicstyle=\ttfamily\tiny\setstretch{1}]  
+  # Obor hodnot nebyl nijak omezen, nenasli jsme nekonzistenci
+  if len(removed) == 0:
+    restricted=False
+ 
+  # Aktualizuj assignment.restricted pro proměnnou varB
+  else:
+    restricte = True
+    dom.difference_update(removed)
+\end{python}\pause
+\begin{python}[basicstyle=\ttfamily\tiny\setstretch{1}]  
+  # Pokud nezbyly zadne hodnoty, jsme nekonzistentni
+  if len(dom) == 0:
+    consistent = False
+    raise cspError.EmptyDomainInAssignment
+  else:
+    consistent = True
+  return restricted,consistent
+\end{python}
+\end{frame}
+
+
+\begin{frame}\frametitle{CSP --- složitost}
+\begin{itemize}
+ \item mají-li proměnné spojitý obor hodnot a podmínky jsou lineární\pause\ (resp. kvadratické)\pause,
+       existuje polynomiální algoritmus\pause
+ \item pokud má constraint graf speciální strukturu\pause\ (strom)\pause\ existuje polynomiální řešení\pause
+ \item obecně NP-úplný problém\pause
+ \item dokonce i když omezíme hodnoty proměnných na 0,1\pause\ (\emph{SAT})\pause, je problém NP-úplný.
+\end{itemize}
+\end{frame}
+
+\begin{frame}\frametitle{SAT --- Boolean satisfiability problem}
+\begin{itemize}
+ \item 3SAT --- splnitelnost formule v CNF (conjunctive normal form), kde každá klauzule má nejvýše
+       tři literály\pause
+ \item HORNSAT, 3SAT, XORSAT, DNF-SAT --- polynomiální čas (DNF SAT dokonce lineární)\pause
+\end{itemize}
+
+
+% SAT --- NP-complete (3-sat: CNF with each clause at most three literals) is NP-complete)
+%	  Note: algorithm deciding solvability in O(f) => algorithm for finding solution in O(nf)
+%         Note: DNF --- easy, some formulas grow exponentially when converted to DNF
+%	  HORNSAT.2SAT,XORSAT --- polynomial time
+%	  3-sat --- randomized algorithm, correct result with high probability, runtime (4/3)**n
+%	  SCHAFER dichotomy --- for each form F the CFSAT is either P or NP-complete
+\end{frame}
+
+
+\end{document}
+
+
+
+

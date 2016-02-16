@@ -1,0 +1,291 @@
+\pdfoutput=1
+\documentclass[red,handout,professionalfont]{beamer}
+% \documentclass[red,professionalfont]{beamer}
+\usepackage{multimedia}
+\usepackage{chessboard}
+\usepackage{url}
+\usepackage{amssymb}  % the check symbol 
+\include{pythonlisting}
+\usepackage{tikz}
+\usepackage{tikz-qtree}
+\usetikzlibrary{decorations.pathreplacing,positioning}
+%\bibliography{mujstyl}
+\theoremstyle{definition}
+\newtheorem{definice}{Definition}[section]
+\newtheorem{thm}{Theorem}[section]
+\newtheorem{idea}{Idea}[section]
+\newtheorem{cor}[thm]{Corrollary}
+\newtheorem{lem}[thm]{Lemma}
+\newtheorem{obs}[thm]{Observation}
+\newtheorem{rem}[thm]{Remark}
+\newtheorem{ex}[thm]{Example}
+\newtheorem{quizz}[thm]{Question}
+\newcommand{\pomega}{\mbox{$\mathcal{P}(\omega)$}}
+\newcommand{\cont}{\mbox{$\mathfrak c$}}
+\newcommand{\ba}{\mbox{${\mathbb B}$}}
+\newcommand{\0}{\mbox{${\bf 0}$}}
+\newcommand{\F}{\mbox{${\mathcal F}$}}
+\newcommand{\rest}{\mbox{$\upharpoonright$}}
+\newcommand{\cl}[1]{\mbox{$\overline{#1}$}}
+\newcommand{\yes}{\textcolor{green}{$\checkmark$}}
+\newcommand{\no}{\textcolor{red}{$\times$}}
+\renewcommand{\emph}[1]{{\bf #1}}
+\mode<presentation>
+{
+\useinnertheme{rounded}
+
+\usecolortheme{whale}
+\usecolortheme{orchid}
+
+\setbeamerfont{block title}{size={}}
+
+%   \useoutertheme{default}
+%   \usetheme{Copenhagen}
+%   \useoutertheme{default}
+  \setbeamercovered{invisible}
+}
+\setbeamertemplate{navigation symbols}{} 
+\usepackage[utf8]{inputenc}
+\usepackage[czech,english]{babel}
+\usepackage{lmodern}
+%\usepackage{times}
+\usepackage[T1]{fontenc}
+
+
+\tikzset{onslide/.code args={<#1>#2}{%
+  \only<#1>{\pgfkeysalso{#2}} % \pgfkeysalso doesn't change the path
+}}
+
+\tikzstyle{hilight}=[red,ultra thick]
+\tikzstyle{active}=[yellow,ultra thick]
+\tikzstyle{memory}=[blue]
+
+
+
+\title[]{Zpracování obrazu\\ (10. přednáška)}
+
+% Dnes se podíváme na jednoduché "goal-based" agenty
+% a ukážeme si obecné postupy 
+
+
+% \author[]{Jonathan L. Verner}
+% \institute[Charles University, Prague] % (optional,but mostly needed)
+% {
+%   Department of Logic\\
+  %   Faculty of Philosophy\\
+%   Charles University in Prague
+% }
+\date[]{}
+% \subject{}
+%\pgfdeclareimage[height=1cm]{university-logo}{UK-logo}
+%\logo{\pgfuseimage{university-logo}}
+
+\begin{document}
+
+\AtBeginSection[]
+{
+  \begin{frame}<beamer>
+    \begin{block}{}
+%    \begin{centering}
+    \hfill\insertsection\hfill\
+ %   \end{centering}
+    \end{block}
+    %\tableofcontents[currentsection]
+  \end{frame}
+}
+
+\AtBeginSubsection[]
+{
+  \begin{frame}<beamer>
+    \begin{block}{}
+  %  \begin{centering}
+    \hfill\insertsubsection\hfill\
+   % \begin{centering}
+    \end{block}
+    %\tableofcontents[currentsection]
+  \end{frame}
+}
+
+%#################################################################
+
+\begin{frame}{} \titlepage
+%{\ \hfill \includegraphics[width=1cm]{UK-logo}\hfill\ }
+\end{frame}
+
+\begin{frame}\frametitle{Od reality k obrazu $\ldots$}
+\begin{center}
+\begin{minipage}{4cm}
+\includegraphics[width=4cm]{vision/mesh_cup.png}
+\begin{displaymath}
+ W
+\end{displaymath}
+\end{minipage}\pause
+\begin{minipage}{1cm}
+\begin{displaymath}
+ \Rightarrow
+\end{displaymath}
+\end{minipage}\pause
+\begin{minipage}{4cm}
+\includegraphics[width=4cm]{vision/real_cup.png}
+\begin{displaymath}
+ g(W)
+\end{displaymath}
+\end{minipage}
+\end{center}
+\end{frame}
+
+\begin{frame}{$\ldots$ a zase zpět}
+\begin{center}
+ A co naopak?
+\end{center}\pause
+\begin{displaymath}
+ g(W)\Rightarrow W
+\end{displaymath}\pause
+\begin{center}
+Nejednoznačnost
+\end{center}\pause
+\begin{center}
+\alt<4>{\includegraphics[width=8cm]{vision/ambiguity1.pdf}}{\includegraphics[width=8cm]{vision/ambiguity2.pdf}}
+\end{center}\pause
+\end{frame}
+
+
+\begin{frame}\frametitle{Zjednodušený model --- camera obscura}
+\begin{center}
+ \includegraphics[width=5cm]{vision/camera_obscura.pdf}
+\end{center}\pause
+\begin{itemize}
+\item[$P$] --- bod na scéně, souřadnice $(X,Y,Z)$\pause
+\item[$P'$] --- obraz bodu $P$ v rovině obrázku, souřadnice $(x,y,z)$\pause
+\end{itemize}
+Pomocí podobnosti trojúhelníků odvodíme\pause
+\begin{displaymath}
+x=\frac{-fX}{Z},\ y=\frac{-fY}{Z} 
+\end{displaymath}
+\end{frame}
+
+\begin{frame}\frametitle{Intenzita, barvy, $\ldots$}
+\begin{block}{}
+\begin{center} 
+Intenzita závisí na úhlu dopadu světla\pause\\
+(Lambertův zákon)
+\end{center}\pause
+\end{block}
+\begin{displaymath}
+ I = \varrho_0I_0\cos\vartheta
+\end{displaymath}\pause
+\begin{itemize}
+\item[$I_0$] --- intenzita dopadajícího světla\pause
+\item[$\varrho_0$] --- albedo\pause
+\item[$\vartheta$] --- úhel dopadu
+\end{itemize}\pause
+\begin{block}{}
+\begin{center}
+Princip trojbarevnosti
+\end{center}
+\end{block}\pause
+\begin{center}
+Každé vlnové spektrum lze složit ze tří složek tak, že člověk nepozná rozdíl.
+\end{center}\pause
+
+\begin{itemize}
+ \item složky: červená, zelená, modrá\pause
+ \item ústřice mají 12 základních barev (!)
+\end{itemize}
+\end{frame}
+
+\begin{frame}\frametitle{Fáze zpracování obrazu}
+\begin{center}
+\alert{Nízkourovňová}\pause
+\end{center}
+\begin{itemize}
+ \item detekce hran\pause
+ \item detekce oblastí\pause
+ \item jednoduchá detekce objektů\pause
+ \item 2D $\Rightarrow$ 3D\pause
+\end{itemize}
+\begin{center}
+\alert{Vysokoúrovňová}\pause
+\end{center}
+\begin{itemize}
+ \item rozpoznávání objektů\pause
+ \item rozpoznávání textu\pause
+ \item $\ldots$
+\end{itemize}
+\end{frame}
+
+\begin{frame}\frametitle{Detekce hran}
+\pause
+\begin{center}
+\begin{minipage}{4cm}
+\includegraphics[width=4cm]{vision/stapler.pdf}
+\end{minipage}\pause
+\begin{minipage}{1cm}
+\begin{displaymath}
+ \Rightarrow
+\end{displaymath}
+\end{minipage}\pause
+\begin{minipage}{4cm}
+\includegraphics[width=4cm]{vision/stapler-edges.pdf}
+\end{minipage}
+\end{center}\pause
+\begin{block}{}
+\begin{center}
+ Idea\pause\\
+ Hrana je místo, kde dochází k ostré změně intenzity.
+ \end{center}
+\end{block}\pause
+\begin{itemize}
+ \item derivace intenzity, gradient intenzity \pause
+ \item odstranění šumu (gausovský filtr)\pause
+ \item konvoluce\pause
+\end{itemize}
+\end{frame}
+
+\begin{frame}\frametitle{Detekce hran podruhé}
+\begin{center}
+ U strukturovaných povrchů (vlasy, oblečení, ...) převažují lokální změny intenzit
+ nad globálními
+\end{center}\pause
+\begin{itemize}
+ \item otisky textur --- histogram intenzit
+ \item relativně nezávislé na změně osvětlení
+\end{itemize}\pause
+\end{frame}
+
+\begin{frame}\frametitle{Optický tok}
+\begin{center}
+ \includegraphics[width=9cm]{vision/tennis.pdf}
+\end{center}
+\end{frame}
+
+\begin{frame}\frametitle{Detekce oblastí}
+\begin{center}
+ \includegraphics[width=9cm]{vision/segmentation.pdf}
+\end{center}
+\end{frame}
+
+\begin{frame}\frametitle{Detekce obličejů}
+\end{frame}
+
+\begin{frame}\frametitle{2D$\Rightarrow$3D}
+\begin{center}
+\includegraphics[width=9cm]{vision/binocular.pdf}
+\end{center}
+\end{frame}
+
+
+\begin{frame}\frametitle{2D$\Rightarrow$3D}
+\begin{center}
+\includegraphics[width=9cm]{vision/scenery.pdf}
+\end{center}
+\end{frame}
+
+\begin{frame}\frametitle{2D$\Rightarrow$3D}
+\begin{center}
+\includegraphics[width=9cm]{vision/horizont.pdf}
+\end{center}
+\end{frame}
+
+
+\end{document}
